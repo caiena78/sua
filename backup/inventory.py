@@ -21,8 +21,8 @@ def nxos(ip):
     return {
         'device_type': 'cisco_nxos',
         'host':   ip,
-        'username': "ca14028",
-        'password': "Ilovemywifeandkids07",
+        'username': "<user>",
+        'password': "<password>",
         'port' : 22,          # optional, defaults to 22   
         'conn_timeout' : 15
     }
@@ -32,8 +32,8 @@ def ios(ip):
     return {
         'device_type': 'cisco_ios',
         'host':   ip,
-        'username': "ca14028",
-        'password': "Ilovemywifeandkids07",
+        'username': "<user>",
+        'password': "<password>",
         'port' : 22,          # optional, defaults to 22   
         'conn_timeout' : 15
     }
