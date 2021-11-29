@@ -13,37 +13,34 @@ from netmiko import ConnectHandler
 import re
 import json
 import copy
+import csv
 import os
-from argparse import ArgumentParser
 
 
-
-
-
-def nxos(ip,user,password):
+def nxos(ip):
     return {
         'device_type': 'cisco_nxos',
         'host':   ip,
-        'username': user,
-        'password': password,
+        'username': "ca14028",
+        'password': "Ilovemywifeandkids07",
         'port' : 22,          # optional, defaults to 22   
         'conn_timeout' : 15
     }
 
 
-def ios(ip,user,password):    
+def ios(ip):    
     return {
         'device_type': 'cisco_ios',
         'host':   ip,
-        'username': user,
-        'password': password,
+        'username': "ca14028",
+        'password': "Ilovemywifeandkids07",
         'port' : 22,          # optional, defaults to 22   
         'conn_timeout' : 15
     }
     
 
 
-def showArp(device):    
+def showArp(device):
     with  ConnectHandler(**device) as net_connect:
           command=f"show ip arp"
           arpTable = net_connect.send_command(command,use_textfsm=True)
@@ -62,12 +59,10 @@ def getRunningConfig(device):
     return Data    
 
 
-def pattern_match(pattern,data,none=False):
+def pattern_match(pattern,data):
     match=re.findall(pattern,data)
     if match:
         return match[0].strip()
-    if none == True:    
-        return None
     return ""
     
 
@@ -78,7 +73,7 @@ def interfaceparse(data):
     for line in data:
         if "interface " in line:
             pattern=r'^interface (.+$)'
-            matchdata=pattern_match(pattern,line,False)
+            matchdata=pattern_match(pattern,line)
             if len(data) < 2:
                 continue
             interfaces.append(interfaceDict())
@@ -165,14 +160,17 @@ def combineDate(mactable,arptable,interfaces):
            continue
         if len(int["mac_access"])==0 and len(int["mac_voice"])==0:
             continue       
-        for mac in int['mac_access']:     
-            try:
-                int['ip_access'].append(arptable['arp'][arptable['idx'][mac]]['address'])                          
-            except:
-                int['ip_access'].append("NO_IP")            
+        for mac in int['mac_access']:
+                try:
+                    int['ip_access'].append(arptable['arp'][arptable['idx'][mac]]['address'])                          
+                except:
+                     int['ip_access'].append("NO_IP")  
         if len(int['mac_voice']) > 0:
             for mac in int['mac_voice']:
-                int['ip_voice'].append(arptable['arp'][arptable['idx'][mac]]['address'])            
+                try:
+                    int['ip_voice'].append(arptable['arp'][arptable['idx'][mac]]['address'])            
+                except:
+                    print("")    
     return interfaces
 
 
@@ -197,131 +195,11 @@ def buildArpIDX(arpTable):
 
 
 
-if __name__ == '__main__':
-
-    parser = ArgumentParser(description='Select options.')
-
-    # Input parameters
-    parser.add_argument('--switchip', type=str, required=True,help='The device IP or DN. Required')
-    parser.add_argument('-su','--switchuser', type=str, required=False,help='Username for the switch. Required')
-    parser.add_argument('-sp','--switchpassword', type=str, required=False,help='Password for the switch. Required')
-    parser.add_argument('--routerip', type=str, required=True,help='The device IP or DN. Required')                     
-    parser.add_argument('-ru','--routeruser', type=str, required=False,help='Username for the router. Required')
-    parser.add_argument('-rp','--routerpassword', type=str, required=True, help='Password for the router. Required')
-    parser.add_argument('-rt','--routertype', type=str,default='nxos', required=False,help='Router OS nxos/iso. Default nxos')
-    parser.add_argument('-st','--switchtype', type=str,default='ios', required=False, help='switch OS nxos/ios. Default ios')                      
-    # parser.add_argument('-env','--setenv',type=str,default="0",required=False,help='Save paramerters as enviroment variables' )
-
-    args = parser.parse_args()
-
-    ip_address_reg='^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
-    
-
-    switchip=args.switchip
-    switchuser=""
-    switchpassword=""
-    switchtype=args.switchtype.lower()
-    routerip=args.routerip
-    routeruser=""
-    routerpassword=""
-    routertype=args.routertype.lower()
-
-
-
-    
-    if len(args.switchuser)>0 and len(args.switchpassword)>0:
-        switchuser=args.switchuser
-        switchpassword=args.switchpassword
-    elif os.environ.get("CISCO-SWITCH-USER") is not None and os.environ.get("CISCO-SWITCH-PASSWORD") is not None:
-        switchuser=os.environ["CISCO-SWITCH-USER"]
-        switchpassword=os.environ["CISCO-SWITCH-PASSWORD"]
-    else:
-        print("user and password must be set for the switch")
-        quit()
-
-    if switchtype is not None or len(switchtype)>=3:
-        pass
-    elif os.environ.get("CISCO-SWITCH-TYPE") is not None:
-       switchtype= os.environ["CISCO-SWITCH-TYPE"].lower()
-    else:
-        print("Switch type must be set to NXOS/IOS")
-        quit()   
-    #ip_address_reg
-    if pattern_match(ip_address_reg,args.switchip,True) is not None:
-        pass
-    elif os.environ.get("CISCO-SWITCH-IP") is not None:
-       switchip=os.environ["CISCO-SWITCH-IP"] 
-    else:
-        print("Switch Ip must be set")
-        quit()    
-
-
-    
-
-    if switchtype == "nxos":
-        switch=nxos(switchip,switchuser,switchpassword)
-    elif switchtype== "ios":
-        switch=ios(switchip,switchuser,switchpassword)
-    else:
-        print("Type has to be set to nxos/ios")
-        quit()
-
-
-
-
-    if len(args.routeruser)>0 and len(args.routerpassword)>0:
-        routeruser=args.routeruser
-        routerpassword=args.routerpassword
-    elif os.environ.get("CISCO-ROUTER-USER") is not None and os.environ.get("CISCO-ROUTER-PASSWORD") is not None:
-        routeruser=os.environ["CISCO-ROUTER-USER"]
-        routerpassword=os.environ["CISCO-ROUTER-PASSWORD"]    
-    else:
-        print("user and password must be set for the router")
-        quit()
-        
-    
-    
-    if pattern_match(ip_address_reg,args.routerip,True) is not None:
-       pass
-    elif os.environ.get("CISCO-ROUTER-IP") is not None and pattern_match(ip_address_reg,os.environ.get("CISCO-ROUTER-IP")) is not None:
-       routerip=os.environ["CISCO-ROUTER-IP"]    
-    else:
-        print("Router IP MUST BE SET")
-
-
-
-    if routertype is None or len(routertype)<3:
-        routertype= os.environ["CISCO-ROUTER-TYPE"].lower() 
-    
+def process(switchip,switchtype,routerip,routertype):
     if routertype == "nxos":
-        router=nxos(routerip,routeruser,routerpassword)
-    elif routertype== "ios":
-        router=ios(routerip,routeruser,routerpassword)
-    else:
-        print("Type has to be set to nxos/ios")
-        quit()
-
-    
-    if routertype is None or len(routertype)<3:
-       routertype= os.environ["CISCO-ROUTER-TYPE"].lower() 
-    
-    
-
-
-    if routertype == "nxos":
-        router=nxos(args.routerip,routeruser,routerpassword)
-    elif routertype== "ios":
-        router=ios(args.routerip,routeruser,routerpassword)
-    else:
-        print("Type has to be set to nxos/ios")
-        quit()
-    
-          
-       
-    
-
-
-
+        router=nxos(routerip)
+    elif routertype=="ios":
+        router=ios(routerip)
 
     arpTable={
         "arp":{},
@@ -332,19 +210,80 @@ if __name__ == '__main__':
         "interfaces":{},
         "idx":{}
     }
-
-
     arpTable['arp']=showArp(router)
     arpTable['idx']=buildArpIDX(arpTable['arp'])
 
-    
-    intConfig=getRunningConfig(switch)
+    if switchtype=="ios":
+        device=ios(switchip)
+    elif switchtype=="nxos":
+        device=nxos(switchip)
+
+
+    intConfig=getRunningConfig(device)
     interfaces['interfaces']=interfaceparse(intConfig)
     interfaces['idx']=buildInterfaceIDX(interfaces)
-    macdata=getMacTable(switch)
+    macdata=getMacTable(device)
     mactable=macTableParse(macdata)
     interfacesData=combineDate(mactable,arpTable,interfaces)
-    json_object = json.dumps(interfacesData['interfaces'], indent = 4) 
-    with open("interface.json", "w") as f:
-        f.write(json_object)
+    
+#   return {
+#         "interface":"",
+#         "description":"",
+#         "access_vlan": "",
+#         "mode":"access",
+#         "voice_vlan":"",
+#         "state":"enabled",
+#         "mac_access":[],
+#         "mac_voice":[],
+#         "ip_access":[],
+#         "ip_voice":[]
+#     }
 
+    #switchip,interface,voice_mac,access_mac,voiceip,accessip
+    with open("output.csv","a") as f:
+        for int in interfacesData['interfaces']:
+            enabled=False
+            interface=int["interface"]
+            if len(int["mac_voice"])>0:
+                mac_voice=int["mac_voice"][0]
+                enabled=True
+            else:
+                mac_voice="N/A"
+            if len(int["mac_access"])>0:     
+                mac_access= int["mac_access"][0]
+                enabled=True
+            else:
+                mac_access="N/A"
+            if    len(int["ip_voice"])>0:         
+                ip_voice=int["ip_voice"][0]
+                enabled=True
+            else:    
+                ip_voice="N/A"
+            if  len(int["ip_access"])>0:
+                ip_access=int["ip_access"][0]
+                enabled=True
+            else:
+                ip_access="N/A"
+            if enabled:    
+                f.write("%s,%s,%s,%s,%s,%s\n" % (switchip,int["interface"],mac_voice,mac_access,ip_voice,ip_access))
+           
+        
+
+    #json_object = json.dumps(interfacesData["interfaces"], indent = 4) 
+    #print(json_object)
+
+    # with open("interface.json", "w") as f:
+    #     f.write(json_object)
+
+
+
+
+csv=csv.DictReader(open("host.csv"))
+#switchip,switchtype,routerip,routertype
+with open("output.csv","w") as f:
+    f.write("switch_ip,interface,mac_voice,mac_access,ip_voice,ip_access\n")
+
+for row in csv:
+  print(row["switchip"])  
+  process(row["switchip"],row["switchtype"],row["routerip"],row["routertype"])
+   
