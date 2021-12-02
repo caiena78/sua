@@ -187,12 +187,19 @@ if __name__ == '__main__':
     #   }
 
 
+
     cnt=0
 
     while True: 
         cleanPortSecurity(switch)        
         print("processing") 
         new_switch=GetSwitchData(router,switch)
+        print("Cleaning up descriptions")
+        updateCMD=cleanUpDescription(new_switch)
+        if len(updateCMD)>0:
+            sw_data=sendConfig(switch,updateCMD)
+            print(sw_data)    
+        print("Finished Cleaning up descriptions")
         print("got switch data")
         for i, (mac,interface) in enumerate(new_switch['mac_idx'].items()):
             try:
@@ -225,7 +232,7 @@ if __name__ == '__main__':
                 print("changing access vlan for mac:%s to vlan:%s" % (mac,old_interface["access_vlan"]))
                 updateCMD.append("switchport access vlan %s " % old_interface["access_vlan"])
                 update_access_vlan=True
-            if len(updateCMD)>1: 
+            if len(updateCMD)>1:              
                 if update_access_vlan:
                     updateCMD.append("shut") 
                     updateCMD.append("no shut")

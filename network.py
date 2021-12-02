@@ -3,8 +3,35 @@ import re
 import os
 
 
+#  return {
+#         "interface":"",
+#         "description":"",
+#         "access_vlan": "1",
+#         "mode":"access",
+#         "voice_vlan":"1",
+#         "state":"enabled",
+#         "mac_access":[],
+#         "mac_voice":[],
+#         "ip_access":[],
+#         "ip_voice":[]
+#     }
 
 
+#this function removed descriptions on ports with no mac address
+def cleanUpDescription(switch):
+    updateCMD=[]
+    
+    for interface in switch['interfaces']:
+        if interface['mode'] == 'trunk':
+            continue
+        if len(interface['mac_access']) > 0:
+            continue
+        if len(interface['mac_voice']) > 0 :
+            continue
+        if len(interface['description']) >0:
+           updateCMD.append('int %s' % interface['interface'])
+           updateCMD.append('no desc')
+    return updateCMD
 
 
 def nxos(ip,user,password):
