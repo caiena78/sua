@@ -1,4 +1,4 @@
 *.json
 host.csv
-backup/
+backup/*
 __pycache__/
