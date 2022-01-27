@@ -5,7 +5,7 @@ from network import *
 
 
 # test with 
-# python bld_int.py --switchip 192.168.164.102 -su <username> -sp <password> --routerip 192.168.0.2 -ru %CISCO-SRV-ACCOUNT%  -rp %CISCO-SRV-PWD% -rt nxos -st ios
+# python bld_int.py --switchip <ip> -su <username> -sp <password> --routerip <ip> -ru <user>  -rp <password> -rt nxos -st ios
 
 if __name__ == '__main__':
 
