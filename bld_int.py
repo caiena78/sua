@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-rp','--routerpassword', type=str, required=True, help='Password for the router. Required')
     parser.add_argument('-rt','--routertype', type=str,default='nxos', required=False,help='Router OS nxos/iso. Default nxos')
     parser.add_argument('-st','--switchtype', type=str,default='ios', required=False, help='switch OS nxos/ios. Default ios')                      
-    parser.add_argument('--outfile', type=str,default='interface.jon', required=False, help='switch OS nxos/ios. Default ios')
+    parser.add_argument('--json_file', type=str,default='interface.jon', required=False, help='switch OS nxos/ios. Default ios')
 
     args = parser.parse_args()
 
