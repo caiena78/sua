@@ -6,6 +6,7 @@ from network import *
 
 # test with 
 # python bld_int.py --switchip <ip> -su <username> -sp <password> --routerip <ip> -ru <user>  -rp <password> -rt nxos -st ios
+# python bld_int.py --switchip 172.17.1.5 -su %CISCO-SRV-ACCOUNT% -sp %CISCO-SRV-PWD%  --routerip 192.168.0.2 -ru %CISCO-SRV-ACCOUNT%  -rp %CISCO-SRV-PWD% -rt nxos -st ios
 
 if __name__ == '__main__':
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-rp','--routerpassword', type=str, required=True, help='Password for the router. Required')
     parser.add_argument('-rt','--routertype', type=str,default='nxos', required=False,help='Router OS nxos/iso. Default nxos')
     parser.add_argument('-st','--switchtype', type=str,default='ios', required=False, help='switch OS nxos/ios. Default ios')                      
-  
+    parser.add_argument('--outfile', type=str,default='interface.jon', required=False, help='switch OS nxos/ios. Default ios')
 
     args = parser.parse_args()
 
@@ -155,5 +156,5 @@ if __name__ == '__main__':
     mactable=macTableParse(macdata)
     interfacesData=combineDate(mactable,arpTable,interfaces)    
     json_object = json.dumps(interfacesData, indent = 4) 
-    with open("interface.json", "w") as f:
+    with open(args.outfile, "w") as f:
         f.write(json_object)

@@ -41,7 +41,7 @@ def nxos(ip,user,password):
         'username': user,
         'password': password,
         'port' : 22,          # optional, defaults to 22   
-        'conn_timeout' : 15
+        'conn_timeout' : 25
         
     }
 
@@ -53,7 +53,7 @@ def ios(ip,user,password):
         'username': user,
         'password': password,
         'port' : 22,          # optional, defaults to 22   
-        'conn_timeout' : 15
+        'conn_timeout' : 25
         
     }
     

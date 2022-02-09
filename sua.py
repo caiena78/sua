@@ -164,7 +164,7 @@ if __name__ == '__main__':
 
     # need to use the json_file arg
 
-    with open('interface.json') as json_file:
+    with open(args.json_file) as json_file:
         old_switch = json.load(json_file)
           
        
